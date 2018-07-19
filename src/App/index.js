@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import WSClient from '../WSClient';
 import "./style.css";
 
 const webSocketServerURL = () => {
@@ -20,24 +21,15 @@ class App extends Component {
 
   componentDidMount() {
     // Create WebSocket connection.
-    this.socket = new WebSocket(webSocketServerURL());
-    
-    // Connection opened
-    this.socket.addEventListener('open', function (evt) {
-      console.log('WS connection opened');
-      // socket.send('Hello Server!');
-    });
-
+    this.socketClient = new WSClient(webSocketServerURL());
     // Listen for messages
-    this.socket.addEventListener('message', evt => this.handleWSMessage(evt));
+    this.socketClient.on('chatMessage', chatMessage => this.onChatMessage(chatMessage));
   }
 
-  handleWSMessage(evt) {
-    const message = JSON.parse(evt.data);
-    console.log('Message from server ', message);
+  onChatMessage(chatMessage) {
     this.setState((prevState, props) => {
       return {
-        messages: prevState.messages.slice().concat(message)
+        messages: prevState.messages.slice().concat(chatMessage)
       };
     });
   }
@@ -51,11 +43,10 @@ class App extends Component {
   onFormSubmit(evt) {
     evt.preventDefault();
     const wsMessage = {
-      type: 'chatMessage',
       username: 'eric',
       content: this.state.draftMessage
     };
-    this.socket.send(JSON.stringify(wsMessage));
+    this.socketClient.send('chatMessage', wsMessage);
     this.setState({
       draftMessage: ''
     });

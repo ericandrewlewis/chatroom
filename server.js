@@ -47,9 +47,11 @@ app.ws('/', (ws, req) => {
   ChatMessage.all({}, (err, chatMessages) => {
     chatMessages.forEach(chatMessage => {
       const wsMessage = {
-        type: 'chatMessage',
-        username: chatMessage.username,
-        content: chatMessage.content
+        event: 'chatMessage',
+        data: {
+          username: chatMessage.username,
+          content: chatMessage.content
+        }
       };
       ws.send(
         JSON.stringify(wsMessage)
@@ -58,10 +60,10 @@ app.ws('/', (ws, req) => {
   });
   ws.on('message', msgSerialized => {
     const msg = JSON.parse(msgSerialized);
-    if (msg.type === 'chatMessage') {
+    if (msg.event === 'chatMessage') {
       const chatMessage = ChatMessage.create({
-        content: msg.content,
-        username: msg.username
+        content: msg.data.content,
+        username: msg.data.username
       }).then(created => {
         wss.broadcast(msgSerialized);
       });
